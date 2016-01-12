@@ -10,7 +10,7 @@ ChatPHP est un système de chat simple en PHP + Ajax.
 > - Activer mod_rewrite Apache2 :
 ```
 	sudo a2enmod rewrite
-	sudo service apache2 rewrite
+	sudo service apache2 restart
 ```
 
 > - Importer la BDD :
