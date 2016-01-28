@@ -1,221 +1,247 @@
 $(document).ready(function()
-{/*
-  var pseudo = 'pseudo1';
-  $('#login').hide();
-  $('#chat').show();
-  get_contact();
-  get_last_message();
-*/
+{
+	var you;
+	var select_room = undefined;
 
-  var pseudo = null;
-  var contact_select = null;
+	/*you = {id: 1, name: 'Test'};
+	$('#login').hide();
+	$('#chat').show();
+	get_chat_room();*/
 
-  $('button[name=login]').click(function()
-  {
-    pseudo = $('input[name=pseudo]').val();
+	/* CONNEXION */
 
-    if (pseudo == '')
-      $('.error').text('Please complete the fields !');
-    else
+	$('button[name=login]').click(function()
+	{
+		if ($('input[name=pseudo]').val() != "")
+		{
+			$.ajax({
+			    url: url + 'connect',
+			    method: 'POST',
+			    dataType: 'json',
+			    data: {
+			        name: $('input[name=pseudo]').val()
+			    },
+			    success: function(data)
+			    {
+			    	you = data;
+			    	pseudo = $('input[name=pseudo]').val();
+			        $('#login').hide();
+			        $('#chat').show();
+			        get_chat_room();
+			        setInterval(get_new_message, 1000);
+			        setInterval(get_notif, 1000);
+			    }
+			});
+		}
+	});
+
+	/* ADD CONTACT */
+
+	$('button[name=add_contact]').click(function()
+	{
+		if ($('input[name=new_contact]') != '')
+		{
+			$.ajax({
+			    url: url + 'contact/add',
+			    method: 'POST',
+			    dataType: 'json',
+			    data: {
+			    	member_id: you.id,
+			    	member: you.name,
+			        contact: $('input[name=new_contact]').val()
+			    },
+			    success: function(data)
+			    {
+			    	console.log(data);
+			    	if (data != 'false')
+						write_contact(data);
+			    }
+			});
+			$('input[name=new_contact]').val('');
+		}
+	});
+
+
+	/* SEND MESSAGE */
+	$('button[name=send]').click(send_message);
+
+ 	$(document).keypress(function(e)
+  	{
+    	if (e.keyCode == 13 && $('textarea:focus').length)
+    	{
+     	 	e.preventDefault();
+      		send_message();
+  	 	}
+ 	});
+
+ 	function send_message()
+  	{
+    	var message = {
+     		author: you.name,
+     		author_id: you.id,
+      		room_id: select_room,
+      		text: $('textarea').val()
+    	};
+
+    	var re = /^[ \n\r]*$/;
+    	if (re.exec($('textarea').val()) == null && select_room !== null)
+    	{
+      		write_message(null, message.text);
+
+      		$.ajax({
+        		url: url + 'send',
+        		method: 'POST',
+        		data: message
+      		});
+   		}
+   		$('textarea').val('').empty();
+	}
+
+	/* WRITE MESSAGE */
+  	function write_message(name, text)
+  	{
+   		if (name == you.name || name == null)
+      		$('#message-container').append('<div class="message text-right bg-lightgray"><p>' + text + '</p></div>');
+    	else 
+    	{
+      		$('#message-container').append('<div class="message"><h5>' + name +' :</h5><p>' + text + '</p></div>');
+    	}
+
+    	$('#message-container').scrollTop($('#message-container').prop("scrollHeight"));
+ 	}
+
+
+	/* GET CHAT ROOM */
+	
+	function get_chat_room()
+	{
+		$.ajax({
+			url: url + 'chatroom',
+			method: 'POST',
+			dataType: 'json',
+			data: {
+			 	id: you.id
+			},
+			success: function(data)
+			{
+				data.forEach(function(contact)
+				{
+					if (contact.length > 0)
+					{
+						write_contact(contact);
+					}
+				});
+			}
+		});
+	}
+
+	function write_contact(contact)
     {
-      $('#login').hide();
-      $('#chat').show();
+    	$('#contact').append('<li class="contact" room="' + contact[0].id + '"><h4>' + contact[0].name + '</h4></li>');	   
+    	$('.contact[room=' + contact[0].id + ']').click(function(e)
+    	{
+    		if (select_room !== null)
+    			$('.contact[room=' + select_room + ']').removeClass('active-contact');
+    		
+    		select_room = $(e.currentTarget).attr('room');
+    		$('.contact[room=' + select_room + ']').removeClass('notif');
+    		$(e.currentTarget).addClass('active-contact');
 
-      get_contact();
+    		get_last_message();
+    	});
     }
-  });
 
-  /* new contact */
+    /* GET NEW MESSAGE */
 
-  $('button[name=add_contact]').click(function()
-   {
-     new_contact = $('input[name=new_contact]').val();
-     $('input[name=new_contact]').val('');
-
-     if (new_contact != '' && new_contact != pseudo && $('.contact[pseudo=' + new_contact + ']').length == 0)
-     {
-       write_contact({sender: new_contact, receiver: new_contact});
-       $('.contact[pseudo=' + new_contact + ']').click();
-
-       $.ajax({
-         url: url + 'send',
-         method: 'POST',
-         data: {
-           sender: pseudo,
-           receiver: new_contact,
-           text: 'Hi !'
-         },
-         success: function()
-         {
-           $('.message-container').empty();
-           write_message(pseudo, 'Hi !');
-         }
-       });
-     }
-   });
-
-  /* send */
-  $('button[name=send]').click(send_message);
-
-  $(document).keypress(function(e)
-  {
-
-    if (e.keyCode == 13 && $('textarea:focus').length)
+    function get_new_message()
     {
-      e.preventDefault();
-      send_message();
+    	if (select_room === undefined)
+    		return;
+
+    	$.ajax({
+			url: url + 'message/new',
+			method: 'POST',
+			dataType: 'json',
+			data: {
+			 	room_id: select_room,
+			 	member_id: you.id
+			},
+			success: function(data)
+			{
+				data.forEach(function(message)
+				{
+					write_message(message.author, message.text);
+				});
+    		}
+		});
     }
 
-  });
+	/* GET LAST MESSAGE */
 
-  setInterval(get_new_message, 1000);
-  setInterval(get_notif, 1000);
+	function get_last_message()
+	{
+		$.ajax({
+			url: url + 'message/last',
+			method: 'POST',
+			dataType: 'json',
+			data: {
+			 	room_id: select_room,
+			 	member_id: you.id
+			},
+			success: function(data)
+			{
+				$('#message-container').empty();
+				data.forEach(function(message)
+				{
+					write_message(message.author, message.text);
+				});
+		 	
+			}
+		});
+	}
 
-  function send_message()
-  {
-    var message = {
-      sender: pseudo,
-      receiver: contact_select,
-      text: $('textarea').val()
-    };
+	function new_contact_write(room_id)
+	{
+		$.ajax({
+			url: url + 'chatroom/name',
+			method: 'POST',
+			dataType: 'json',
+			data: {
+				room_id: room_id
+			},
+			success: function (contact)
+			{
+				write_contact(contact);
+			}
+		});
+	}
 
-    var re = /^[ \n\r]*$/;
-    if (re.exec($('textarea').val()) == null && contact_select !== null)
-    {
-      write_message(null, message.text);
+	/* GET NOTIF */
 
-      $.ajax({
-        url: url + 'send',
-        method: 'POST',
-        data: message
-      });
-    }
-    $('textarea').val('').empty();
-  }
+	function get_notif()
+	{
+		$.ajax({
+			url: url + 'notif',
+			method: 'POST',
+			dataType: 'json',
+			data: {
+				member_id: you.id
+			},
+			success: function (data)
+			{console.log(data);
+				data.forEach(function(notif)
+				{
+					
+					if (notif !== undefined)
+					{
+						if ($('.contact[room=' + notif + ']').text() == '')
+							new_contact_write(notif)
 
-  /* write message */
-  function write_message(name, text)
-  {
-    if (name == pseudo || name == null)
-      $('#message-container').append('<div class="message text-right bg-lightgray"><p>' + text + '</p></div>');
-    else {
-      $('#message-container').append('<div class="message"><h5>' + name +' :</h5><p>' + text + '</p></div>');
-    }
-
-    $('#message-container').scrollTop($('#message-container').prop("scrollHeight"));
-  }
-
-
-  /* get new message */
-
-  function get_new_message()
-  {
-    $.ajax({
-      url: url + 'new',
-      method: 'POST',
-      dataType: 'json',
-      data: {receiver: pseudo, sender: contact_select},
-      success: function(messages)
-      {
-        messages.forEach(function(message)
-        {
-          write_message(message.sender, message.text);
-        });
-      }
-    });
-  }
-
-  /* get notif */
-
-  function get_notif()
-  {
-    $.ajax({
-      url: url + 'notif',
-      method: 'POST',
-      dataType: 'json',
-      data: {receiver: pseudo},
-      success: function(notifs)
-      {
-        notifs.forEach(function(notif)
-        {
-          if ($('.contact[pseudo=' + notif.sender + ']').length == 0)
-            write_contact({sender: notif.sender, receiver: notif.sender});
-
-          if (!$('.contact[pseudo=' + notif.sender + ']').hasClass('notif') && notif.sender != contact_select)
-            $('.contact[pseudo=' + notif.sender + ']').addClass('notif');
-        });
-      }
-    });
-  }
-
-  /* get last message */
-
-  function get_last_message()
-  {
-    $.ajax({
-      url: url + 'last',
-      method: 'POST',
-      dataType: 'json',
-      data: {pseudo: pseudo, contact_name: contact_select},
-      success: function(messages)
-      {
-        messages.reverse();
-        messages.forEach(function(message)
-        {
-          write_message(message.sender, message.text);
-        });
-      }
-    });
-  }
-
-  function write_contact(contact)
-  {
-    var contact_name = (contact.sender == pseudo ? contact.receiver : contact.sender);
-    if ($('.contact[pseudo=' + contact_name + ']').length == 0)
-    {
-      var new_contact = $('#contact').append('<li class="contact" pseudo="' + contact_name + '"><h4>' + contact_name + '</h4></li>');
-      $('.contact[pseudo=' + contact_name + ']').click(function(e)
-      {
-        new_contact_select = $(e.currentTarget).attr('pseudo');
-        if (contact_select != new_contact_select)
-        {
-          if (contact_select)
-            $('.contact[pseudo='+ contact_select +']').removeClass('active-contact');
-          contact_select = new_contact_select;
-
-          $(e.currentTarget).addClass('active-contact');
-
-          if ($(e.currentTarget).hasClass('notif'))
-            $(e.currentTarget).removeClass('notif');
-
-          $('#message-container').empty();
-          get_last_message();
-        }
-      });
-    }
-  }
-
-  /* get contact */
-
-  function get_contact()
-  {
-    $.ajax({
-      url: url + 'contact',
-      method: 'POST',
-      dataType: 'json',
-      data: {pseudo: pseudo, contact_name: contact_select},
-      success: function(contacts)
-      {
-        contacts.forEach(function(contact)
-        {
-          write_contact(contact);
-          contact_select = $('.contact:first-child').attr('pseudo');
-          $('.contact:first-child').addClass('active-contact');
-        });
-
-        get_last_message();
-      }
-    });
-  }
-
+				        if (!$('.contact[room=' + notif + ']').hasClass('notif') && notif != select_room)
+	          				$('.contact[room=' + notif + ']').addClass('notif');
+					}
+				});
+			}
+		});
+	}
 });

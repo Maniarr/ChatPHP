@@ -9,13 +9,18 @@ Autoload::load($load);
 
 $router = new Router();
 
-$router->get('/', 'PageController::index');
+$router->get('/home2', 'PageController::index');
 
-$router->post('/new', 'MessageController::get_new_message');
-$router->post('/send', 'MessageController::send_message');
-$router->post('/last', 'MessageController::get_last_message');
-$router->post('/contact', 'MessageController::get_contact');
-$router->post('/notif', 'MessageController::get_notification');
+/* Ajax */
+$router->post('/connect', 'MemberController::connect');
+$router->post('/chatroom', 'MemberController::get_chat_room');
+$router->post('/send', 'MessageController::send');
+$router->post('/notif','MessageController::get_notif');
+
+$router->post('/chatroom/name', 'MemberController::get_chat_name');
+$router->post('/contact/add', 'MemberController::add_contact');
+$router->post('/message/last', 'MessageController::get_last_message');
+$router->post('/message/new','MessageController::get_new_message');
 
 $router->add_404('PageController::route_404');
 

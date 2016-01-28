@@ -1,71 +1,63 @@
-<?php
+<?php 
 
 class MessageController extends Controller
 {
-  function send_message()
-  {
-      $req = $this->db->prepare('INSERT INTO message(sender, receiver, text) VALUE (:sender, :receiver, :text)');
-      $req->execute(array(':sender' => htmlspecialchars($_POST['sender']),
-                          ':receiver' => htmlspecialchars($_POST['receiver']),
-                          ':text' => htmlspecialchars($_POST['text'])));
-  }
+	public function send()
+	{
+		$messages = $this->model('Messages');
 
-  function	get_new_message()
-  {
-    $req = $this->db->prepare('SELECT id, sender, text FROM message WHERE receiver = :receiver AND sender = :sender AND show_at IS NULL ORDER BY created_at ASC');
-    $req->execute(array(':receiver' => htmlspecialchars($_POST['receiver']), ':sender' => htmlspecialchars($_POST['sender'])));
+		$messages->send(array(
+							'author' 		=> htmlspecialchars($_POST['author']),
+							'author_id' 	=> htmlspecialchars($_POST['author_id']),
+							'room_id' 		=> htmlspecialchars($_POST['room_id']),
+							'text'			=> htmlspecialchars($_POST['text'])
+						));
+	}
 
-    $messages = $req->fetchAll();
+	public function get_notif()
+	{
+		$participants = $this->model('Participants');
+		$member_id = htmlspecialchars($_POST['member_id']);
+		$messages = $this->model('Messages');
+		$activities = $participants->get_last_activities($member_id);
+		$response = array();
 
-    foreach ($messages as $message)
-    {
-      $req = $this->db->prepare('UPDATE message SET show_at = CURRENT_TIMESTAMP WHERE id = :id');
-      $req->execute(array(':id' => $message['id']));
-    }
+		foreach ($activities as $activity)
+		{
+			$new_messages = $messages->get_new_message($member_id, $activity['room_id'], $activity['last_activity']);
+			if (isset($new_messages[0]))
+				array_push($response, $activity['room_id']);
+		}
 
-    echo json_encode($messages);
-  }
+		echo json_encode($response);
+	}
 
-  function	get_last_message()
-  {
-    $req = $this->db->prepare('SELECT id,  sender, text FROM message WHERE receiver = :pseudo AND sender = :contact_name AND show_at IS NULL ORDER BY created_at');
-    $req->execute(array(':pseudo' => htmlspecialchars($_POST['pseudo']),
-                        ':contact_name' => htmlspecialchars($_POST['contact_name'])));
+	public function get_last_message()
+	{
+		$limit = 10;
+		$room_id = htmlspecialchars($_POST['room_id']);
+		$member_id = htmlspecialchars($_POST['member_id']);
+		$messages = $this->model('Messages');
+		$participants = $this->model('Participants');
 
-    $new_messages = $req->fetchAll();
+		$participants->update_activity($member_id, $room_id);
+		echo json_encode($messages->get_last_message($room_id, $limit));
+	}
 
-    foreach ($new_messages as $message)
-    {
-      $req = $this->db->prepare('UPDATE message SET show_at = CURRENT_TIMESTAMP WHERE id = :id');
-      $req->execute(array(':id' => $message['id']));
-    }
+	public function get_new_message()
+	{
+		$participants = $this->model('Participants');
+		$messages = $this->model('Messages');
 
-    $req = $this->db->prepare('SELECT sender, text FROM message WHERE receiver = :pseudo AND sender = :contact_name OR sender = :pseudo AND receiver = :contact_name ORDER BY created_at DESC LIMIT 10');
-    $req->execute(array(':pseudo' => htmlspecialchars($_POST['pseudo']),
-                        ':contact_name' => htmlspecialchars($_POST['contact_name'])));
+		$room_id = htmlspecialchars($_POST['room_id']);
+		$member_id = htmlspecialchars($_POST['member_id']);
 
-    $messages = $req->fetchAll();
+		$last_activity = $participants->get_last_activity($member_id, $room_id);
+		$new_messages = $messages->get_new_message($member_id, $room_id, $last_activity['last_activity']);
 
-    echo json_encode($messages);
-  }
+		if (isset($new_messages[0]))
+			$participants->update_activity($member_id, $room_id);
 
-  function get_contact()
-  {
-    $req = $this->db->prepare('SELECT DISTINCT sender, receiver FROM `message` WHERE receiver = :pseudo OR sender = :pseudo ORDER BY created_at DESC');
-    $req->execute(array(':pseudo' => htmlspecialchars($_POST['pseudo'])));
-
-    $messages = $req->fetchAll();
-
-    echo json_encode($messages);
-  }
-
-  function get_notification()
-  {
-    $req = $this->db->prepare('SELECT sender FROM message WHERE receiver = :receiver AND show_at IS NULL ORDER BY created_at ASC');
-    $req->execute(array(':receiver' => htmlspecialchars($_POST['receiver'])));
-
-    $messages = $req->fetchAll();
-
-    echo json_encode($messages);
-  }
+		echo json_encode($new_messages);
+	}
 }

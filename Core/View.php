@@ -3,6 +3,7 @@
 class View
 {
   public $path;
+  public $data;
 
   function View($name)
   {
@@ -14,10 +15,11 @@ class View
     echo $this->fetch($data);
   }
 
-  function fetch($data_get_router_with_method_to_methods_fetch_of_object_view = null)
+  function fetch($data_controller = null)
   {
-    if ($data_get_router_with_method_to_methods_fetch_of_object_view != null)
-        extract($data_get_router_with_method_to_methods_fetch_of_object_view);
+    if ($data_controller != null)
+      $this->data = $data_controller;
+      
     ob_start();
         require($this->path);
     return ob_get_clean();

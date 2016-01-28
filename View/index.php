@@ -25,7 +25,7 @@
               <button type="button" name="add_contact">Add</button>
             </div>
             <ul id="contact">
-              
+
             </ul>
           </div>
           <div class="columns medium-8" style="background: #e1e1e1">
