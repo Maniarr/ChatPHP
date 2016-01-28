@@ -19,7 +19,7 @@ ChatPHP est un système de chat simple en PHP + Ajax.
 ```
 > - Paramétrer la BDD :
 ```
-	Fichier 'Controller/Controller.php'
+	Fichier 'Core/Database.php'
   	$host     = 'localhost';
   	$port     = 3306;
   	$dbname   = 'chatphp';
