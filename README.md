@@ -15,7 +15,7 @@ ChatPHP est un système de chat simple en PHP + Ajax.
 
 > - Importer la BDD :
 ```
-	Fichier 'chatphp.sql'
+	Fichier 'chatdb.sql'
 ```
 > - Paramétrer la BDD :
 ```
