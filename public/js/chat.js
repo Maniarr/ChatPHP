@@ -128,7 +128,9 @@ $(document).ready(function()
 				{
 					if (contact.length > 0)
 					{
-						write_contact(contact);
+						response = [];
+						response[0] = contact;
+						write_contact(response);
 					}
 				});
 			}
@@ -137,8 +139,8 @@ $(document).ready(function()
 
 	function write_contact(contact)
     {
-    	$('#contact').append('<li class="contact" room="' + contact[0].id + '"><h4>' + contact[0].name + '</h4></li>');	   
-    	$('.contact[room=' + contact[0].id + ']').click(function(e)
+    	$('#contact').append('<li class="contact" room="' + contact.id + '"><h4>' + contact.name + '</h4></li>');	   
+    	$('.contact[room=' + contact.id + ']').click(function(e)
     	{
     		if (select_room !== null)
     			$('.contact[room=' + select_room + ']').removeClass('active-contact');
@@ -231,7 +233,6 @@ $(document).ready(function()
 			{console.log(data);
 				data.forEach(function(notif)
 				{
-					
 					if (notif !== undefined)
 					{
 						if ($('.contact[room=' + notif + ']').text() == '')

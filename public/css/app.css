@@ -1,6 +1,6 @@
 .chat .columns
 {
-  height: 600px;
+  height: 580px;
 }
 
 .login
@@ -106,7 +106,7 @@ textarea[rows]
 
 .message-container
 {
-  height: 84%;
+  height: 88%;
   margin-top: 1%;
   background: #fff;
   overflow-y: scroll
@@ -132,9 +132,11 @@ textarea[rows]
     margin-bottom: 0;
 }
 
+
+
 .send-container
 {
-  height: 15%;
+  height: 12%;
 
   padding: 1% 0;
 }
@@ -147,4 +149,11 @@ textarea[rows]
 .notif
 {
   animation: notif-animation 1s linear infinite;
+}
+
+#message_input
+{
+  width: 82%;
+  display: inline-block;
+  height: 51px;
 }

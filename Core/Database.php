@@ -11,7 +11,7 @@ class Database
       'port'     => 3306,
       'dbname'   => 'chatv2',
       'username' => 'root',
-      'password' => '',
+      'password' => 'password',
     );
 
     $this->db = $this->connect($credentials);

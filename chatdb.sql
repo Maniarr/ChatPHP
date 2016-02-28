@@ -29,7 +29,7 @@ SET time_zone = "+00:00";
 CREATE TABLE `chat_room` (
   `id` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
@@ -48,7 +48,7 @@ INSERT INTO `chat_room` (`id`, `name`, `created_at`) VALUES
 CREATE TABLE `members` (
   `id` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
@@ -63,7 +63,7 @@ CREATE TABLE `messages` (
   `author_id` int(11) NOT NULL,
   `room_id` int(11) NOT NULL,
   `text` text NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
@@ -83,7 +83,7 @@ CREATE TABLE `participants` (
   `id` int(11) NOT NULL,
   `member_id` int(11) NOT NULL,
   `room_id` int(11) NOT NULL,
-  `last_activity` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `last_activity` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --

@@ -37,8 +37,8 @@ class MemberController extends Controller
 
   	foreach($rooms as $room)
   	{	
-  		array_push($response, $chatroom->get_name($room['room_id']));
-  	}	
+  		array_push($response, $chatroom->get_name($room['room_id'])[0]);
+  	}
 
   	echo json_encode($response);
   }
@@ -60,7 +60,7 @@ class MemberController extends Controller
       $participants->create_participant($room_id['id'], $member_id);
       $participants->create_participant($room_id['id'], $contact['id'], date('Y-m-d H:i:s', strtotime('- 1 year')));
       $messages->send(array('author' => $member, 'author_id' => $member_id, 'room_id' => $room_id['id'], 'text' => 'Hi !'));
-      echo json_encode(array($room_id));
+      echo json_encode($room_id);
     }
     else
       echo json_encode('false');
